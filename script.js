@@ -1,93 +1,75 @@
+// 確保所有 DOM 載入後才執行，避免找不到 wells-container
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("Checking for data...");
+
+    // 1. 檢查資料是否讀入
+    if (typeof wellsData !== 'undefined' && Array.isArray(wellsData)) {
+        console.log("Data found, starting render.");
+        
+        // 2. 自動排序：進行中排前面
+        wellsData.sort((a, b) => (b.isActive === a.isActive) ? 0 : b.isActive ? -1 : 1);
+        
+        // 3. 呼叫渲染
+        renderDashboard(wellsData);
+    } else {
+        // 如果全黑，請按 F12 打開 Console，這行字會告訴我們為什麼
+        console.error("Critical Error: wellsData is missing or empty!");
+        const container = document.getElementById('wells-container');
+        if (container) container.innerHTML = "<p style='color:red; text-align:center;'>Error: Data connection failed.</p>";
+    }
+});
+
 function renderDashboard(wells) {
     const container = document.getElementById('wells-container');
+    if (!container) return;
     container.innerHTML = ''; 
 
     wells.forEach(well => {
-        // 繪圖計算 (以 800x600 的 SVG 空間為準)
+        // 安全檢查：確保數值存在
+        const actualVertical = well.actualVertical || 0;
+        const actualHorizontal = well.actualHorizontal || 0;
+
         const startX = 150;
         const startY = 40;
         const curveRadius = 80;
-        
-        // 垂直深度比例 (假設最大 15000ft 對應 300px)
-        let vLen = (well.actualVertical / 15000) * 350;
-        // 水平長度比例 (假設最大 15000ft 對應 450px)
-        let hLen = (well.actualHorizontal / 15000) * 500;
+        let vLen = (actualVertical / 15000) * 350;
+        let hLen = (actualHorizontal / 15000) * 500;
 
-        // 構建路徑：起點 -> 垂直下鑽 -> 圓角曲線 -> 水平延伸
-        const actualD = `
-            M ${startX},${startY} 
-            L ${startX},${startY + vLen} 
-            Q ${startX},${startY + vLen + curveRadius} ${startX + curveRadius},${startY + vLen + curveRadius}
-            L ${startX + curveRadius + hLen},${startY + vLen + curveRadius}
-        `;
+        const actualD = `M ${startX},${startY} L ${startX},${startY + vLen} Q ${startX},${startY + vLen + curveRadius} ${startX + curveRadius},${startY + vLen + curveRadius} L ${startX + curveRadius + hLen},${startY + vLen + curveRadius}`;
 
         const wellEl = document.createElement('div');
         wellEl.className = 'well-unit';
+        wellEl.style.marginBottom = "50px"; // 確保兩口井之間有間距
+
         wellEl.innerHTML = `
             <div class="dashboard-header">
                 <div class="well-info">
                     <h1>${well.wellName}</h1>
-                    <div style="color: #888; font-size: 0.9rem; margin-top:5px;">${well.location}</div>
+                    <div style="color: #888; font-size: 0.9rem;">${well.location}</div>
                 </div>
-                <div style="display:flex; flex-direction:column; align-items:flex-end;">
-                    <div style="color: #888; font-size: 0.8rem; margin-bottom: 8px;">${well.reportDate}</div>
-                    <div class="status-badge">${well.status}</div>
+                <div style="text-align:right">
+                    <div style="color: #888; font-size: 0.8rem;">${well.reportDate}</div>
+                    <div class="status-badge" style="border: 1px solid ${well.isActive ? '#fbbf24' : '#555'}; color: ${well.isActive ? '#fbbf24' : '#555'};">${well.status}</div>
                 </div>
             </div>
-
             <div class="visual-stage">
                 <div class="glass-frame pos-data-main">
                     <div class="label-sm">Current MD</div>
                     <div class="value-lg">${well.currentMD.toLocaleString()} <small>ft</small></div>
-                    <div style="margin-top:15px;" class="label-sm">Current TVD</div>
-                    <div class="value-lg">${well.currentTVD.toLocaleString()} <small>ft</small></div>
-                    <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:15px 0;">
-                    <div style="display:flex; justify-content: space-between;">
-                        <div><div class="label-sm">Actual Vertical</div><div style="font-size:0.9rem;">${well.actualVertical.toLocaleString()} ft</div></div>
-                        <div><div class="label-sm">Actual Horiz</div><div style="font-size:0.9rem;">${well.actualHorizontal.toLocaleString()} ft</div></div>
-                    </div>
                 </div>
-
                 <div class="glass-frame pos-cost-main">
                     <div class="label-sm">Cumulative Cost</div>
                     <div class="value-gold">$ ${well.costIncurred.toLocaleString()}</div>
-                    <div style="margin-top:10px;" class="label-sm">Estimated Total</div>
-                    <div style="font-size:1.1rem; font-weight:bold;">$ ${well.estimatedCost.toLocaleString()}</div>
                 </div>
-
-                <div class="glass-frame pos-rop-mw">
-                    <div style="text-align: center;">
-                        <div class="label-sm">ROP</div>
-                        <div class="value-lg">${well.rop} <small>ft/hr</small></div>
-                    </div>
-                    <div style="width: 1px; background: rgba(255,255,255,0.2);"></div>
-                    <div style="text-align: center;">
-                        <div class="label-sm">MW</div>
-                        <div class="value-lg">${well.mudWeight} <small>ppg</small></div>
-                    </div>
-                </div>
-
-                <svg class="well-bore-diagram" viewBox="0 0 800 600">
-                    <path d="${actualD}" class="path-actual" />
-                    <circle cx="${startX}" cy="${startY}" r="8" fill="#555" />
-                    <circle cx="${startX + curveRadius + hLen}" cy="${startY + vLen + curveRadius}" r="8" fill="#555" />
+                <svg class="well-bore-diagram" viewBox="0 0 800 600" style="width:100%; height:auto;">
+                    <path d="${actualD}" stroke="${well.isActive ? '#fbbf24' : '#555'}" stroke-width="4" fill="none" />
                 </svg>
+            </div>
+            <div style="margin-top: 20px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                <div class="label-sm">Daily Notes</div>
+                <div style="color: #ddd;">${well.dailyNotes}</div>
             </div>
         `;
         container.appendChild(wellEl);
     });
 }
-document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM 已載入，準備讀取資料...");
-    
-    if (typeof wellsData !== 'undefined') {
-        console.log("找到 wellsData，開始排序與渲染");
-        // 自動排序
-        wellsData.sort((a, b) => (b.isActive === a.isActive) ? 0 : b.isActive ? -1 : 1);
-        // 執行渲染
-        renderDashboard(wellsData);
-    } else {
-        console.error("錯誤：找不到 wellsData。請確認 daily-data.js 已經正確載入且變數名稱無誤。");
-    }
-});
-
