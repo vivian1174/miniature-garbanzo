@@ -77,12 +77,17 @@ function renderDashboard(wells) {
         container.appendChild(wellEl);
     });
 }
-window.onload = function() {
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM 已載入，準備讀取資料...");
+    
     if (typeof wellsData !== 'undefined') {
+        console.log("找到 wellsData，開始排序與渲染");
         // 自動排序
         wellsData.sort((a, b) => (b.isActive === a.isActive) ? 0 : b.isActive ? -1 : 1);
-        // 直接執行渲染，不需密碼
+        // 執行渲染
         renderDashboard(wellsData);
+    } else {
+        console.error("錯誤：找不到 wellsData。請確認 daily-data.js 已經正確載入且變數名稱無誤。");
     }
-};
+});
 
