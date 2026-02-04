@@ -77,3 +77,14 @@ function renderDashboard(wells) {
         container.appendChild(wellEl);
     });
 }
+window.onload = function() {
+    if (typeof wellsData !== 'undefined') {
+        // 自動排序：Active 的排在最前面
+        wellsData.sort((a, b) => (b.isActive === a.isActive) ? 0 : b.isActive ? -1 : 1);
+        
+        // 執行渲染
+        renderDashboard(wellsData);
+    } else {
+        console.error("錯誤：找不到 wellsData 資料，請檢查 daily-data.js 是否正確載入。");
+    }
+};
