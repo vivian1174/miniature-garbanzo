@@ -1,23 +1,31 @@
+/**
+ * FPCC USA - Drilling Dashboard 最終整合版
+ * 確保資料載入、自動排序、並完整對應 style.css 樣式
+ */
+
+// 定義渲染函式
 function renderDashboard(wells) {
     const container = document.getElementById('wells-container');
     if (!container) return;
     container.innerHTML = ''; 
 
     wells.forEach(well => {
-        // 1. 計算 SVG 鑽井路徑比例
+        // SVG 繪圖參數
         const startX = 150;
         const startY = 40;
         const curveRadius = 80;
-        let vLen = (well.actualVertical / 15000) * 350;
-        let hLen = (well.actualHorizontal / 15000) * 500;
+        
+        // 深度比例計算 (以 15000ft 為參考基準)
+        let vLen = ((well.actualVertical || 0) / 15000) * 350;
+        let hLen = ((well.actualHorizontal || 0) / 15000) * 500;
 
         const actualD = `M ${startX},${startY} L ${startX},${startY + vLen} Q ${startX},${startY + vLen + curveRadius} ${startX + curveRadius},${startY + vLen + curveRadius} L ${startX + curveRadius + hLen},${startY + vLen + curveRadius}`;
 
-        // 2. 建立 HTML 結構 (必須完全符合 style.css 的 class)
         const wellEl = document.createElement('div');
         wellEl.className = 'well-unit';
-        wellEl.style.marginBottom = "100px"; // 增加井與井的間距
+        wellEl.style.marginBottom = "80px";
 
+        // 填入符合 style.css 結構的內容
         wellEl.innerHTML = `
             <div class="dashboard-header">
                 <div class="well-info">
@@ -35,32 +43,32 @@ function renderDashboard(wells) {
             <div class="visual-stage">
                 <div class="glass-frame pos-data-main">
                     <div class="label-sm">Current MD</div>
-                    <div class="value-lg">${well.currentMD.toLocaleString()} <small>ft</small></div>
+                    <div class="value-lg">${(well.currentMD || 0).toLocaleString()} <small>ft</small></div>
                     <div style="margin-top:15px;" class="label-sm">Current TVD</div>
-                    <div class="value-lg">${well.currentTVD.toLocaleString()} <small>ft</small></div>
+                    <div class="value-lg">${(well.currentTVD || 0).toLocaleString()} <small>ft</small></div>
                 </div>
 
                 <div class="glass-frame pos-cost-main">
                     <div class="label-sm">Cumulative Cost</div>
-                    <div class="value-gold">$ ${well.costIncurred.toLocaleString()}</div>
+                    <div class="value-gold">$ ${(well.costIncurred || 0).toLocaleString()}</div>
                     <div style="margin-top:10px;" class="label-sm">Estimated Total</div>
-                    <div style="font-size:1.1rem; font-weight:bold;">$ ${well.estimatedCost.toLocaleString()}</div>
+                    <div style="font-size:1.1rem; font-weight:bold;">$ ${(well.estimatedCost || 0).toLocaleString()}</div>
                 </div>
 
                 <div class="glass-frame pos-rop-mw">
                     <div style="text-align: center;">
                         <div class="label-sm">ROP</div>
-                        <div class="value-lg">${well.rop} <small>ft/hr</small></div>
+                        <div class="value-lg">${well.rop || 0} <small>ft/hr</small></div>
                     </div>
                     <div style="width: 1px; background: rgba(255,255,255,0.2);"></div>
                     <div style="text-align: center;">
                         <div class="label-sm">MW</div>
-                        <div class="value-lg">${well.mudWeight} <small>ppg</small></div>
+                        <div class="value-lg">${well.mudWeight || 0} <small>ppg</small></div>
                     </div>
                 </div>
 
-                <svg class="well-bore-diagram" viewBox="0 0 800 600">
-                    <path d="${actualD}" class="path-actual" style="stroke: ${well.isActive ? '#fbbf24' : '#555'}; stroke-width: 4; fill: none;" />
+                <svg class="well-bore-diagram" viewBox="0 0 800 600" style="width:100%; height:100%;">
+                    <path d="${actualD}" style="stroke: ${well.isActive ? '#fbbf24' : '#555'}; stroke-width: 4; fill: none;" />
                     <circle cx="${startX}" cy="${startY}" r="6" fill="#fbbf24" />
                     <circle cx="${startX + curveRadius + hLen}" cy="${startY + vLen + curveRadius}" r="8" fill="${well.isActive ? '#fbbf24' : '#555'}" />
                 </svg>
@@ -68,20 +76,29 @@ function renderDashboard(wells) {
 
             <div style="margin-top: 20px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border: 1px solid #333;">
                 <div class="label-sm" style="color:#fbbf24; margin-bottom:10px;">Daily Engineer Notes</div>
-                <div style="color: #ddd; line-height: 1.6; white-space: pre-wrap;">${well.dailyNotes}</div>
+                <div style="color: #ddd; line-height: 1.6; white-space: pre-wrap;">${well.dailyNotes || ''}</div>
             </div>
         `;
         container.appendChild(wellEl);
     });
 }
 
-// 啟動函式
-document.addEventListener('DOMContentLoaded', () => {
+// 系統發動機：確保資料讀到才執行
+function init() {
+    console.log("System Attempting Start...");
     if (typeof wellsData !== 'undefined') {
-        // 自動排序：Active 在最前面
+        console.log("Data Linked Successfully.");
+        // 自動排序
         wellsData.sort((a, b) => (b.isActive === a.isActive) ? 0 : b.isActive ? -1 : 1);
         renderDashboard(wellsData);
     } else {
-        console.error(" wellsData is missing!");
+        console.error("Data Link Failed: wellsData is undefined.");
     }
-});
+}
+
+// 監聽各種載入狀況
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
