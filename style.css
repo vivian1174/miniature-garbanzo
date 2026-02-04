@@ -1,0 +1,89 @@
+:root {
+    --bg-black: #121212;
+    --card-bg: rgba(40, 40, 40, 0.7);
+    --accent-yellow: #fbbf24;
+    --text-main: #ffffff;
+    --text-muted: #888888;
+}
+
+body {
+    margin: 0;
+    background-color: var(--bg-black);
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text-main);
+}
+
+/* 頂部標題與狀態 */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px 0;
+}
+
+.well-info h1 {
+    color: var(--accent-yellow);
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.status-badge {
+    border: 1px solid var(--accent-yellow);
+    color: var(--accent-yellow);
+    padding: 5px 15px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+}
+
+.status-badge::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    background-color: var(--accent-yellow);
+    border-radius: 50%;
+}
+
+/* 鑽井圖區域 */
+.visual-stage {
+    position: relative;
+    width: 100%;
+    height: 600px;
+    background: #1a1a1a;
+    border-radius: 12px;
+    border: 1px solid #333;
+    overflow: hidden;
+}
+
+/* 數據卡片樣式 */
+.glass-frame {
+    position: absolute;
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 8px;
+    z-index: 10;
+}
+
+.pos-data-main { top: 50px; right: 280px; width: 200px; }
+.pos-cost-main { top: 50px; right: 50px; width: 200px; text-align: right; }
+.pos-rop-mw { bottom: 50px; right: 50px; display: flex; gap: 30px; }
+
+.label-sm { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+.value-lg { font-size: 1.5rem; font-weight: bold; }
+.value-gold { color: var(--accent-yellow); font-size: 1.8rem; font-weight: bold; }
+
+/* SVG 路徑樣式 */
+.well-bore-diagram { width: 100%; height: 100%; }
+.path-planned { fill: none; stroke: rgba(255, 255, 255, 0.05); stroke-width: 15; stroke-linecap: round; }
+.path-actual { fill: none; stroke: var(--accent-yellow); stroke-width: 15; stroke-linecap: round; }
+
+.drilling-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.well-unit { margin-bottom: 80px; }
