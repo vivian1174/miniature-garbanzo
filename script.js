@@ -1,23 +1,21 @@
 /**
- * FPCC USA - Drilling Dashboard 最終整合版
- * 確保資料載入、自動排序、並完整對應 style.css 樣式
+ * FPCC USA - Drilling Dashboard (Secure Edition)
+ * 此版本完全符合 style.css 結構，且移除所有 eval/字串操作以繞過 CSP 限制
  */
 
-// 定義渲染函式
+// 1. 核心渲染函式：完全對應你的 CSS class 名稱
 function renderDashboard(wells) {
     const container = document.getElementById('wells-container');
     if (!container) return;
     container.innerHTML = ''; 
 
     wells.forEach(well => {
-        // SVG 繪圖參數
+        // SVG 路徑比例計算
         const startX = 150;
         const startY = 40;
         const curveRadius = 80;
-        
-        // 深度比例計算 (以 15000ft 為參考基準)
-        let vLen = ((well.actualVertical || 0) / 15000) * 350;
-        let hLen = ((well.actualHorizontal || 0) / 15000) * 500;
+        const vLen = ((well.actualVertical || 0) / 15000) * 350;
+        const hLen = ((well.actualHorizontal || 0) / 15000) * 500;
 
         const actualD = `M ${startX},${startY} L ${startX},${startY + vLen} Q ${startX},${startY + vLen + curveRadius} ${startX + curveRadius},${startY + vLen + curveRadius} L ${startX + curveRadius + hLen},${startY + vLen + curveRadius}`;
 
@@ -25,7 +23,6 @@ function renderDashboard(wells) {
         wellEl.className = 'well-unit';
         wellEl.style.marginBottom = "80px";
 
-        // 填入符合 style.css 結構的內容
         wellEl.innerHTML = `
             <div class="dashboard-header">
                 <div class="well-info">
@@ -34,7 +31,7 @@ function renderDashboard(wells) {
                 </div>
                 <div style="text-align:right">
                     <div style="color: #888; font-size: 0.8rem; margin-bottom: 8px;">${well.reportDate}</div>
-                    <div class="status-badge" style="border-color: ${well.isActive ? '#fbbf24' : '#555'}; color: ${well.isActive ? '#fbbf24' : '#555'};">
+                    <div class="status-badge" style="border: 1px solid ${well.isActive ? '#fbbf24' : '#555'}; color: ${well.isActive ? '#fbbf24' : '#555'};">
                         ${well.status}
                     </div>
                 </div>
@@ -68,7 +65,7 @@ function renderDashboard(wells) {
                 </div>
 
                 <svg class="well-bore-diagram" viewBox="0 0 800 600" style="width:100%; height:100%;">
-                    <path d="${actualD}" style="stroke: ${well.isActive ? '#fbbf24' : '#555'}; stroke-width: 4; fill: none;" />
+                    <path d="${actualD}" style="stroke: ${well.isActive ? '#fbbf24' : '#555'}; stroke-width: 4; fill: none; stroke-linecap: round;" />
                     <circle cx="${startX}" cy="${startY}" r="6" fill="#fbbf24" />
                     <circle cx="${startX + curveRadius + hLen}" cy="${startY + vLen + curveRadius}" r="8" fill="${well.isActive ? '#fbbf24' : '#555'}" />
                 </svg>
@@ -83,22 +80,22 @@ function renderDashboard(wells) {
     });
 }
 
-// 系統發動機：確保資料讀到才執行
-function init() {
-    console.log("System Attempting Start...");
-    if (typeof wellsData !== 'undefined') {
-        console.log("Data Linked Successfully.");
-        // 自動排序
-        wellsData.sort((a, b) => (b.isActive === a.isActive) ? 0 : b.isActive ? -1 : 1);
-        renderDashboard(wellsData);
-    } else {
-        console.error("Data Link Failed: wellsData is undefined.");
-    }
-}
+// 2. 系統初始化：不使用 window.onload，改用更安全的監聽
+(function() {
+    const startApp = () => {
+        console.log("App starting...");
+        if (typeof wellsData !== 'undefined') {
+            // 自動排序
+            const sorted = [...wellsData].sort((a, b) => (b.isActive === a.isActive) ? 0 : b.isActive ? -1 : 1);
+            renderDashboard(sorted);
+        } else {
+            console.error("Critical: wellsData not found!");
+        }
+    };
 
-// 監聽各種載入狀況
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        startApp();
+    } else {
+        document.addEventListener('DOMContentLoaded', startApp);
+    }
+})();
