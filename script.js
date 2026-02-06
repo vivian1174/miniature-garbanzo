@@ -62,7 +62,7 @@ const renderDashboard = (wells) => {
                 </div>
 
                 <svg class="well-bore-diagram" viewBox="0 0 800 600" style="width:100%; height:100%;">
-                    <path d="${actualD}" style="stroke: ${well.isActive ? '#fbbf24' : '#555'}; stroke-width: 10; fill: none; stroke-linecap: round;" />
+                    <path d="${pathD}" class="path-actual" style="stroke: ${well.isActive ? '#fbbf24' : '#555'};" />
                     <circle cx="${startX}" cy="${startY}" r="6" fill="#fbbf24" />
                     <circle cx="${startX + curveRadius + hLen}" cy="${startY + vLen + curveRadius}" r="8" fill="${well.isActive ? '#fbbf24' : '#555'}" />
                 </svg>
@@ -87,3 +87,4 @@ document.addEventListener('DOMContentLoaded', () => {
         renderDashboard(sortedWells);
     }
 });
+
