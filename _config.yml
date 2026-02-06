@@ -1,3 +1,0 @@
-theme: null
-keep_files: [daily-data.js, script.js]
-include: [.nojekyll]
